@@ -37,3 +37,7 @@ Organized in two substructures
   <https://sidfc-dashboard.azurewebsites.net/>
 
   Which can be run locally on any Linux supporting machine.
+
+  A short video demo of the dashboard functionality can be found here:
+
+  <https://youtu.be/W33WE848y5g>
