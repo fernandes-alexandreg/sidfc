@@ -11,6 +11,7 @@ from statistics import NormalDist
 data = pd.read_pickle("Data/forecast_1_2017.pkl").sort_index()
 
 app = dash.Dash(__name__)
+
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 app.layout = dbc.Container(html.Div(
@@ -21,7 +22,7 @@ app.layout = dbc.Container(html.Div(
            
         dbc.Row([
             
-                html.Div(html.H1("Demand Forecasting"))
+                html.Div(html.H1("Demand Forecasting: Visualizing Results"))
          ])
     ]),
         
@@ -33,8 +34,8 @@ app.layout = dbc.Container(html.Div(
                 dbc.Col(html.Div(dcc.RadioItems
                 (
                     id='agg_func_radio',
-                    options=[{'label': i, 'value': i} for i in ['max', 'mean','min']],
-                    value='mean',
+                    options=[{'label': i, 'value': i[:-1]} for i in ['max ', 'mean ','min ']],
+                    value='max',
                     labelStyle={'display': 'inline-block'}
                 )), width=4),
                 
@@ -43,6 +44,7 @@ app.layout = dbc.Container(html.Div(
                     min_date_allowed = data.index.min(),
                     max_date_allowed = data.index.max(),
                     initial_visible_month= data.index.min(),
+                    start_date = data.index.min(),
                     end_date= data.index.max()
                 )), width=4),
             ],
@@ -60,11 +62,11 @@ app.layout = dbc.Container(html.Div(
             dbc.Col(html.Div(dcc.Graph(
                 id='forecast-descriptives',
                   hoverData = {'points': [{'curveNumber': 0, 'x': 1, 'y': 1}]}
-            )), width=4),
+            )), width=3),
         
            dbc.Col(html.Div(dcc.Graph(
                id='forecast-history'
-           )), width={"size": 6, "offset": 2}),
+           )), width={"size": 9, "offset": 0}),
                 
         ],
         justify="start",
@@ -80,8 +82,8 @@ app.layout = dbc.Container(html.Div(
                 dbc.Col(html.Div(dcc.Slider(
                     id='confidence_slider',
                     min= 0,
-                    max= 99.99,
-                    value= 99.99,
+                    max= 99.9999,
+                    value= 99.9999,
                     step=1,
                     tooltip={"placement": "top", "always_visible": True}
             )), width=6),
@@ -116,8 +118,17 @@ def update_graph(agg_func,
     p = pd.pivot_table(data[start_date:end_date],values="mean_forecast", columns = 'store', index = 'item', aggfunc= agg_func)
     
     fig1 = px.imshow(p,
-                labels=dict(x="Store", y="Item", color="Scale"),
-                color_continuous_scale=px.colors.sequential.RdBu)
+                labels=dict(x="Store", y="Item", color="Sales"),
+                zmax = 180,
+                color_continuous_scale=px.colors.sequential.Jet
+                    )
+    
+    fig1.layout.coloraxis.showscale = False
+    
+    fig1.update_layout(
+                        margin=dict(l=100, r=100, t=30, b=30),
+                        paper_bgcolor="LightSteelBlue",
+                      )
 
     selection = data.loc[(data.store == store) &
                          (data.item == item)]
@@ -159,10 +170,16 @@ def update_graph(agg_func,
         yaxis_title='Sales',
         hovermode="x",
         xaxis_range=[start_date,end_date],
-        yaxis_range=[0,200]
+        yaxis_range=[0,180]
     )
+    
+    fig2.update_layout(
+                        margin=dict(l=20, r=20, t=20, b=20),
+                        paper_bgcolor="LightSteelBlue",
+                      )
+    
+    
     return fig1, fig2
 
 if __name__ == '__main__':
     app.run_server(debug=True, host='0.0.0.0', port='80')
-    #app.run_server(debug=False)
